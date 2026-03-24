@@ -149,6 +149,7 @@ public class BouncyBallSim {
 		public void keyReleased(KeyEvent e){
 			if (e.getKeyCode() == KeyEvent.VK_Z){
 				ball.setGrap(false);
+				graphicsPanel.grappleTarget = null;
 			}
 		}
 		@Override
@@ -309,6 +310,7 @@ public class BouncyBallSim {
 	private class GraphicsPanel extends JPanel{
 		private static double dx = 0;
 		private static double dy = 0;
+		public static Ground grappleTarget = null;
 
 		public static double getDX(){ return dx; }
 		public static double getDY(){ return dy; }
@@ -330,30 +332,41 @@ public class BouncyBallSim {
 			ball.checkCollisions();
 
 			double minDist = Double.MAX_VALUE, dist = 0;
-			for (Ground gr : grounds){
-				double[] d = ball.getDxDy(gr);
-				double d2 = Math.sqrt(d[0] * d[0] + d[1] * d[1]);
+			Ground closeGround = null;
 
-				if (d2 < minDist){
-					minDist = d2;
-					dx = d[0];
-					dy = d[1];
+			if (ball.getGrap() && grappleTarget == null){
+				for (Ground gr : grounds){
+					double[] d = ball.getDxDy(gr);
+					double d2 = Math.sqrt(d[0] * d[0] + d[1] * d[1]);
+
+					if (d2 < minDist){
+						minDist = d2;
+						closeGround = gr;
+					}
 				}
-
-				dist = Math.sqrt(minDist);
-				if (gr.getType().equals("CIRC")) {
-					dist = Math.sqrt(dx*dx + dy*dy) - gr.getRad() - BALL_RAD;
-				} 
-				else {
-					dist = Math.sqrt(dx*dx + dy*dy);
-				}	
+				grappleTarget = closeGround;
 			}
-		
-			boolean coll = (minDist < BALL_RAD * BALL_RAD);
-			if (ball.getGrap() == true && !coll){
+
+			double grapLen = 0;
+			if (grappleTarget != null){
+				double[] d = ball.getDxDy(grappleTarget);
+
+				dx = d[0];
+				dy = d[1];
+
+				if (grappleTarget.getType().equals("CIRC")){
+					dist = (Math.sqrt(d[0] * d[0] + d[1] * d[1]) - BALL_RAD - grappleTarget.getRad());
+				}
+				else {
+					dist = Math.sqrt(d[0] * d[0] + d[1] * d[1]);
+				}
+				grapLen = dist;
+			}
+			boolean coll = dist <= 0;
+			if (ball.getGrap() && !coll){
 				double nx = dx / dist;
 				double ny = dy / dist;
-				double v[] = {ball.getVX(),	 ball.getVY()};
+				double v[] = {ball.getVX(),	ball.getVY()};
 				double n[] = {nx, ny};
 
 				double radVel = Vector.dot(v, n);
