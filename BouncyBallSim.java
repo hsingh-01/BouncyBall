@@ -339,7 +339,7 @@ public class BouncyBallSim {
 					dx = d[0];
 					dy = d[1];
 				}
-				
+
 				dist = Math.sqrt(minDist);
 				if (gr.getType().equals("CIRC")) {
 					dist = Math.sqrt(dx*dx + dy*dy) - gr.getRad() - BALL_RAD;
@@ -356,7 +356,6 @@ public class BouncyBallSim {
 				double v[] = {ball.getVX(),	 ball.getVY()};
 				double n[] = {nx, ny};
 
-				// double radVel = ball.getVX() * nx + ball.getVY() * ny;
 				double radVel = Vector.dot(v, n);
 				if (radVel < 0){ // ball moving away from grap point
 					ball.setVX(ball.getVX() - radVel * nx);
