@@ -7,6 +7,8 @@ import java.awt.Color;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.List;
+import java.awt.BasicStroke;
+import java.awt.Graphics2D;
 
 import javax.swing.Timer;
 import javax.swing.SwingUtilities;
@@ -18,7 +20,6 @@ import javax.swing.SwingConstants;
 
 import java.lang.Math;
 import java.util.Random;
-
 
 public class BouncyBallSim {
 	public static final int WIDTH = 800;
@@ -78,6 +79,7 @@ public class BouncyBallSim {
 		graphicsPanel.addKeyListener(new grappleListener());
 		graphicsPanel.setFocusable(true);
 		graphicsPanel.requestFocusInWindow();
+		graphicsPanel.setBackground(Color.WHITE);
 		window.add(graphicsPanel, BorderLayout.CENTER);
 		timer = new Timer(GAME_SPEED, new TimerListener());
  
@@ -115,12 +117,12 @@ public class BouncyBallSim {
 
 	private class CreateGroundListener implements ActionListener {
 		public void actionPerformed(ActionEvent e){
+			grounds.clear();
 			for (int i = 0; i < 5; i++){
-				Ground g2 = new Ground(25, 300, 200, "CIRC");
-				Ground g = new Ground(25, 100, 300, "CIRC");
+				Ground g = new Ground(25, 100 + 200 * i, 300, "CIRC");
 				grounds.add(g);
-				grounds.add(g2);    			
-				Ground floor = new Ground(200, 500, 350, 25, "RECT");
+
+				Ground floor = new Ground(0, graphicsPanel.getHeight() - 30, graphicsPanel.getWidth(), 15, "RECT");
 				grounds.add(floor);
 			}
 
@@ -341,8 +343,13 @@ public class BouncyBallSim {
 		public static double getDX(){ return dx; }
 		public static double getDY(){ return dy; }
 
+		public static final double noGrappleCircleWidth = 1; 
+		public static final int GRAP_USE = -2;
+		public static final int GRAP_REC = +1;
+
+
 		public void updatePosition(){
-			if (!ball.getGrap() && ball.getGrapMeter() < ball.GRAP_LIMIT){ ball.changeGrapMeter(+1); }
+			if (!ball.getGrap() && ball.getGrapMeter() < ball.GRAP_LIMIT){ ball.changeGrapMeter(GRAP_REC); }
 			ballPosLabel.setText((int)ball.getX() + ", " + (int)ball.getY());
 			ball.setVY(ball.getVY() + ball.getAY() + G);
 			ball.setY(ball.getY() + ball.getVY());
@@ -401,7 +408,7 @@ public class BouncyBallSim {
 				System.out.println(dist);
 				double radVel = Vector.dot(v, n);
 				// System.out.println(Vector.mag(n));
-				if (ball.getGrapMeter() > 0){ ball.changeGrapMeter(-1); }
+				if (ball.getGrapMeter() > 0){ ball.changeGrapMeter(GRAP_USE); } // deplete meter
 
 				if (radVel < 0){ // ball moving away from grap point
 					ball.setVX(ball.getVX() - radVel * n[0]);
@@ -415,23 +422,41 @@ public class BouncyBallSim {
 		@Override
 		protected void paintComponent(Graphics g){
 			super.paintComponent(g);
-			g.setColor(Color.RED);
-			g.fillOval((int)ball.getX() - BALL_RAD, (int)ball.getY() - BALL_RAD, BALL_RAD*2, BALL_RAD*2);
-			g.setColor(Color.BLACK);
+			float thickness = 1;
+
+			Graphics2D g2d = (Graphics2D) g; //needed for setsrtoke
+			g2d.setStroke(new BasicStroke(thickness));
+
+			if (ball.getGrap() == true && ball.grapAvailable()){
+				thickness = 3;
+				g2d.drawLine((int) ball.getX(), (int) ball.getY(), (int)ball.getX() + (int) GraphicsPanel.getDX(), (int)ball.getY() + (int) GraphicsPanel.getDY());
+			}
+			else if (ball.getGrap() && !ball.grapAvailable()){
+				g2d.setColor(Color.GRAY);
+				thickness = 2;
+				g2d.drawOval((int) (ball.getX() - GRAP_LEN), (int) (ball.getY() - GRAP_LEN), (int) (2 * GRAP_LEN), (int)(2 * GRAP_LEN));
+			}	
+
+			g2d.setColor(Color.RED);
+			g2d.fillOval((int)ball.getX() - BALL_RAD, (int)ball.getY() - BALL_RAD, BALL_RAD*2, BALL_RAD*2);
+			g2d.setColor(Color.BLACK);
 
 			for (Ground gr : grounds){
 				if (gr.getType().equals("RECT")){
-					g.fillRect(gr.getX(), gr.getY(), gr.getW(), gr.getH());
+					g2d.fillRect(gr.getX(), gr.getY(), gr.getW(), gr.getH());
 				}
 				if (gr.getType().equals("CIRC")){
-					g.fillOval(gr.getX(), gr.getY(), (int)gr.getRad() * 2, (int)gr.getRad() * 2);
+					g2d.fillOval(gr.getX(), gr.getY(), (int)gr.getRad() * 2, (int)gr.getRad() * 2);
 				}
 			}
-			g.setColor(Color.GRAY);
-			if (ball.getGrap() == true && ball.grapAvailable()){
-				g.drawLine((int) ball.getX(), (int) ball.getY(), (int)ball.getX() + (int) GraphicsPanel.getDX(), (int)ball.getY() + (int) GraphicsPanel.getDY());
-			}
-			g.fillRect(30, 30, ball.getGrapMeter(), 25);
+			g2d.setColor(Color.GRAY);
+		
+			g.fillRect(((int)getWidth()/2 - ball.GRAP_LIMIT/2), 30, ball.getGrapMeter(), 25);
+			g.setColor(Color.BLACK);
+			// outline of meter
+			thickness = 5;
+			g2d.setStroke(new BasicStroke(thickness));
+			g2d.drawRect(((int)getWidth()/2 - ball.GRAP_LIMIT/2), 30, ball.GRAP_LIMIT, 25);
 		}
 	}
 }
