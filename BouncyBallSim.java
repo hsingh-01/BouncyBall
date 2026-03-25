@@ -1,17 +1,21 @@
-import javax.swing.JFrame;
-import javax.swing.JButton;
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
-import javax.swing.JPanel;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import java.awt.Graphics;
-import javax.swing.Timer;
-import javax.swing.SwingUtilities;
 import java.awt.Color;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.List;
+
+import javax.swing.Timer;
+import javax.swing.SwingUtilities;
+import javax.swing.JPanel;
+import javax.swing.JFrame;
+import javax.swing.JButton;
+import javax.swing.JTextField;
+import javax.swing.SwingConstants;
+
 import java.lang.Math;
 
 
@@ -33,6 +37,8 @@ public class BouncyBallSim {
 	private JButton pauseButton;
 	private JButton createGroundButton;
 
+	private JTextField ballPosLabel;
+
 	private JPanel buttonPanel;
 	private GraphicsPanel graphicsPanel;
 	private Timer timer;
@@ -50,6 +56,10 @@ public class BouncyBallSim {
 		pauseButton = new JButton("pause");
 		createGroundButton = new JButton("create ground");
 
+		ballPosLabel = new JTextField(20);
+		ballPosLabel.setBounds(WIDTH/2, 100, 50, 100);
+		ballPosLabel.setHorizontalAlignment(SwingConstants.CENTER);
+
 		resetButton.addActionListener(new ResetListener());
 		pauseButton.addActionListener(new PauseButtonListener());
 		createGroundButton.addActionListener(new CreateGroundListener());
@@ -61,6 +71,8 @@ public class BouncyBallSim {
 		window.add(buttonPanel, BorderLayout.SOUTH);
 
 		graphicsPanel = new GraphicsPanel();
+		graphicsPanel.add(ballPosLabel);
+
 		graphicsPanel.addKeyListener(new ballMotionListener());
 		graphicsPanel.addKeyListener(new grappleListener());
 		graphicsPanel.setFocusable(true);
@@ -107,8 +119,8 @@ public class BouncyBallSim {
 				Ground g = new Ground(25, 100, 300, "CIRC");
 				grounds.add(g);
 				grounds.add(g2);    			
-				//Ground floor = new Ground(0, 825 - 80, WIDTH, 20, "RECT");
-				//grounds.add(floor);
+				Ground floor = new Ground(200, 500, 50, 50, "RECT");
+				grounds.add(floor);
 			}
 
 			graphicsPanel.requestFocusInWindow();
@@ -316,6 +328,7 @@ public class BouncyBallSim {
 		public static double getDY(){ return dy; }
 
 		public void updatePosition(){
+			ballPosLabel.setText((int)ball.getX() + ", " + (int)ball.getY());
 			ball.setVY(ball.getVY() + ball.getAY() + G);
 			ball.setY(ball.getY() + ball.getVY());
 
