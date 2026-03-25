@@ -17,6 +17,7 @@ import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 
 import java.lang.Math;
+import java.util.Random;
 
 
 public class BouncyBallSim {
@@ -27,7 +28,7 @@ public class BouncyBallSim {
 	public static boolean PAUSE = true;
 	public static final double X_A = 0.02;
 	public static final double X_FRIC = 0.0;
-	public static final double Y_BOUNCE_FRIC = -0.6;
+	public static final double Y_BOUNCE_FRIC = -1;
 	public static final int GAME_SPEED = 7;
 	public Ball ball = new Ball(100, 100);
 	private JFrame window;
@@ -185,6 +186,7 @@ public class BouncyBallSim {
 		public boolean GRAP = false;
 		public double speed = 0.0;
 		private boolean isTouchingGround = false;
+		private boolean grapAvailable = false;
 
 
 		public Ball(double bx, double by){
@@ -217,6 +219,9 @@ public class BouncyBallSim {
 
 		public void setAX(double dax){ this.ball_a[0] = dax; }
 		public void setAY(double day){ this.ball_a[1] = day; }
+
+		public boolean grapAvailable() { return grapAvailable; }
+		public void setGrapAvailable(boolean t){ grapAvailable = t; }
 
 
 
@@ -259,6 +264,7 @@ public class BouncyBallSim {
 			double[] v_prime;
 			double[] term2 = Vector.scale(n, 2 * Vector.dot(v, n));
 			v_prime = Vector.subtract(v, term2);
+			// v_prime[1] *= Y_BOUNCE_FRIC;
 			ball_v = v_prime;
 		}
 
@@ -323,6 +329,7 @@ public class BouncyBallSim {
 		private static double dx = 0;
 		private static double dy = 0;
 		public static Ground grappleTarget = null;
+		public static final double GRAP_LEN = 300.0;
 
 		public static double getDX(){ return dx; }
 		public static double getDY(){ return dy; }
@@ -357,11 +364,10 @@ public class BouncyBallSim {
 						closeGround = gr;
 					}
 				}
-				grappleTarget = closeGround;
+				grappleTarget = closeGround; // find closest ground
 			}
 
-			double grapLen = 0;
-			if (grappleTarget != null){
+			if (grappleTarget != null){ // find distance from closest ground
 				double[] d = ball.getDxDy(grappleTarget);
 
 				dx = d[0];
@@ -373,10 +379,12 @@ public class BouncyBallSim {
 				else {
 					dist = Math.sqrt(d[0] * d[0] + d[1] * d[1]);
 				}
-				grapLen = dist;
+				// grapLen = dist;
 			}
-			boolean coll = dist <= 0;
-			if (ball.getGrap() && !coll){
+			ball.setGrapAvailable(dist < GRAP_LEN);
+			System.out.println(dist < GRAP_LEN);
+			boolean coll = dist <= 0; // only then calculate distances - prevents multi-object and object switching when grappling
+			if (ball.getGrap() && !coll && ball.grapAvailable()){
 				double nx = dx / dist;
 				double ny = dy / dist;
 				double v[] = {ball.getVX(),	ball.getVY()};
@@ -387,8 +395,6 @@ public class BouncyBallSim {
 					ball.setVX(ball.getVX() - radVel * nx);
 					ball.setVY(ball.getVY() - radVel * ny);					
 				}
-				// double speed = Math.sqrt(ball.getVX()*ball.getVX() + ball.getVY()*ball.getVY());
-				// double centAccel = speed*speed / dist;
 			}
 
 			graphicsPanel.repaint();
@@ -397,9 +403,10 @@ public class BouncyBallSim {
 		@Override
 		protected void paintComponent(Graphics g){
 			super.paintComponent(g);
-			g.fillOval((int)ball.getX() - BALL_RAD, (int)ball.getY() - BALL_RAD, BALL_RAD*2, BALL_RAD*2);
-
 			g.setColor(Color.RED);
+			g.fillOval((int)ball.getX() - BALL_RAD, (int)ball.getY() - BALL_RAD, BALL_RAD*2, BALL_RAD*2);
+			g.setColor(Color.BLACK);
+
 			for (Ground gr : grounds){
 				if (gr.getType().equals("RECT")){
 					g.fillRect(gr.getX(), gr.getY(), gr.getW(), gr.getH());
@@ -408,7 +415,8 @@ public class BouncyBallSim {
 					g.fillOval(gr.getX(), gr.getY(), (int)gr.getRad() * 2, (int)gr.getRad() * 2);
 				}
 			}
-			if (ball.getGrap() == true){
+			g.setColor(Color.GRAY);
+			if (ball.getGrap() == true && ball.grapAvailable()){
 				g.drawLine((int) ball.getX(), (int) ball.getY(), (int)ball.getX() + (int) GraphicsPanel.getDX(), (int)ball.getY() + (int) GraphicsPanel.getDY());
 			}
 		}
