@@ -9,6 +9,7 @@ import java.awt.event.KeyListener;
 import java.awt.List;
 import java.awt.BasicStroke;
 import java.awt.Graphics2D;
+import java.awt.Font;
 
 import javax.swing.Timer;
 import javax.swing.SwingUtilities;
@@ -17,11 +18,15 @@ import javax.swing.JFrame;
 import javax.swing.JButton;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
+import javax.swing.JLabel;
 
 import java.lang.Math;
 import java.util.Random;
 
+import java.text.DecimalFormat;
+
 public class BouncyBallSim {
+	DecimalFormat speedFormat = new DecimalFormat("0.00");
 	public static final int WIDTH = 800;
 	public static final int HEIGHT = 800;
 	public static final double G = 0.029;
@@ -43,7 +48,7 @@ public class BouncyBallSim {
 	private JButton pauseButton;
 	private JButton createGroundButton;
 
-	private JTextField ballPosLabel;
+	private JLabel ballPosLabel;
 
 	private JPanel buttonPanel;
 	private GraphicsPanel graphicsPanel;
@@ -56,7 +61,7 @@ public class BouncyBallSim {
 	Color grappleColor = new Color(0, 0, 0);
 
 	public BouncyBallSim(){
-		Ball ball = new Ball(WIDTH/2, 50);
+		Ball ball = new Ball(WIDTH/2, 100);
 		window = new JFrame("Bouncing Ball");
 		window.setSize(WIDTH, HEIGHT);
 		window.setLayout(new BorderLayout());
@@ -67,9 +72,11 @@ public class BouncyBallSim {
 		pauseButton = new JButton("pause");
 		createGroundButton = new JButton("create ground");
 
-		ballPosLabel = new JTextField(20);
-		ballPosLabel.setBounds(WIDTH/2, 100, 50, 100);
-		ballPosLabel.setHorizontalAlignment(SwingConstants.CENTER);
+		ballPosLabel = new JLabel();
+		ballPosLabel.setBounds(WIDTH/2, 200, 50, 100);
+		ballPosLabel.setHorizontalAlignment(SwingConstants.RIGHT);
+		Font monoF = new Font(Font.MONOSPACED, Font.PLAIN, 14);
+		ballPosLabel.setFont(monoF);
 
 		resetButton.addActionListener(new ResetListener());
 		pauseButton.addActionListener(new PauseButtonListener());
@@ -104,6 +111,10 @@ public class BouncyBallSim {
 			ball.setY(100);
 			ball.setVX(0);
 			ball.setVY(0);
+
+			ball.setGrapOnCooldown(false);
+			ball.setGrapMeter(Ball.GRAP_LIMIT);
+
 			graphicsPanel.requestFocusInWindow();
 		}
 	}
@@ -126,7 +137,6 @@ public class BouncyBallSim {
 				pauseButton.setText("play");
 			}
 			MS_ELAPSED += GAME_SPEED;
-			// System.out.println(MS_ELAPSED);
 		}
 	}
 
@@ -377,7 +387,7 @@ public class BouncyBallSim {
 			}
 
 			if (!ball.getGrap() && ball.getGrapMeter() < ball.GRAP_LIMIT && !ball.grapOnCd()){ ball.changeGrapMeter(GRAP_REC); }
-			ballPosLabel.setText((int)ball.getX() + ", " + (int)ball.getY());
+			ballPosLabel.setText("(" + (int)(ball.getX()) + ", " + (int)(ball.getY()) + ") speed: " + speedFormat.format(ball.getSpeed()));
 			ball.setVY(ball.getVY() + ball.getAY() + G);
 			ball.setY(ball.getY() + ball.getVY());
 
@@ -443,7 +453,6 @@ public class BouncyBallSim {
 			if (ball.getGrapMeter() <= 0 && !ball.grapOnCd()){
 				ball.setGrapOnCooldown(true);
 			}
-
 			graphicsPanel.repaint();
 		}
 
