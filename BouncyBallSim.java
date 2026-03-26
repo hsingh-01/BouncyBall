@@ -493,9 +493,12 @@ public class BouncyBallSim {
 					g2d.fillOval(gr.getX(), gr.getY(), (int)gr.getRad() * 2, (int)gr.getRad() * 2);
 				}
 			}
+
 			g2d.setColor(grappleBarColor);
-			g.fillRect(((int)getWidth()/2 - ball.GRAP_LIMIT/(BAR_SCALE*2)), 30, ball.getGrapMeter()/BAR_SCALE, 25);
-			g.setColor(Color.BLACK);
+			g2d.fillRect(((int)getWidth()/2 - ball.GRAP_LIMIT/(BAR_SCALE*2)), 30, ball.getGrapMeter()/BAR_SCALE, 25);
+			
+			if (ball.grapOnCd() && ball.getGrap()){ g2d.setColor(Color.RED); }
+			else { g2d.setColor(Color.BLACK); }
 
 			// outline of meter bar
 			thickness = grapBarThickness;
