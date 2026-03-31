@@ -1,6 +1,5 @@
 # Grapple Platformer
 ### Author: Harmehel Singh
-### Mr. Polacco 
 
 This is a WIP swinging-grapple platformer, made for my AP CS A final project.
 
