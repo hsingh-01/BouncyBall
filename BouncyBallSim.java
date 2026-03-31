@@ -350,13 +350,6 @@ public class BouncyBallSim {
 		private int rad;
 		private String shapeType;
 
-		private double g_x;
-		private double g_y;
-
-		private double[] g_v = new double[2];
-		private double[] g_a = new double[2];
-
-
 		public Ground(double x, double y, int w, int h, String shape){
 			this.x = x;
 			this.y = y;
@@ -383,18 +376,6 @@ public class BouncyBallSim {
 
 		public double getRad(){ return rad; }
 		public String getType(){ return shapeType; }
-
-		public double getVX(){ return g_v[0]; }
-		public double getVY(){ return g_v[1]; }
-
-		public double getAX(){ return g_a[0]; }
-		public double getAY(){ return g_a[1]; }
-
-		public void setVX(double dvx){ this.g_v[0] = dvx; }
-		public void setVY(double dvy){ this.g_v[1] = dvy; }
-
-		public void setAX(double dax){ this.g_a[0] = dax; }
-		public void setAY(double day){ this.g_a[1] = day; }
 	}
 
 	private class GraphicsPanel extends JPanel{
