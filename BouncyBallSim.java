@@ -27,9 +27,10 @@ import java.text.DecimalFormat;
 
 public class BouncyBallSim {
 	DecimalFormat speedFormat = new DecimalFormat("0.00");
+
 	public static final int WIDTH = 800;
 	public static final int HEIGHT = 800;
-	public static final double G = 0.029;
+	public static final double G = 0.02;
 	public static final int BALL_RAD = 14;
 	public static boolean PAUSE = true;
 	public static final double X_A = 0.02;
@@ -37,11 +38,11 @@ public class BouncyBallSim {
 	public static final double Y_BOUNCE_FRIC = -1;
 	public static final int GAME_SPEED = 5;
 	public static final double GRAP_CD = 1.5;
-	public static final double GRAP_GIVEBACK = 0.3;
+	public static final double GRAP_GIVEBACK = 0.25;
 	public static int MS_ELAPSED = 0;
-	public static int SEC = 0;
+	public static final int SCROLL_MARK = 100;
 
-	public Ball ball = new Ball(100, 100);
+	Ball ball = new Ball(100, 100);
 	private JFrame window;
 
 	private JButton resetButton;
@@ -61,7 +62,6 @@ public class BouncyBallSim {
 	Color grappleColor = new Color(0, 0, 0);
 
 	public BouncyBallSim(){
-		Ball ball = new Ball(WIDTH/2, 100);
 		window = new JFrame("Bouncing Ball");
 		window.setSize(WIDTH, HEIGHT);
 		window.setLayout(new BorderLayout());
@@ -107,7 +107,7 @@ public class BouncyBallSim {
 
 	private class ResetListener implements ActionListener{
 		public void actionPerformed(ActionEvent e){
-			ball.setX(WIDTH/2);
+			ball.setX(100);
 			ball.setY(100);
 			ball.setVX(0);
 			ball.setVY(0);
@@ -115,6 +115,9 @@ public class BouncyBallSim {
 			ball.setGrapOnCooldown(false);
 			ball.setGrapMeter(Ball.GRAP_LIMIT);
 
+			grounds.clear();
+			CreateGroundListener resetGroundTemp = new CreateGroundListener();
+			resetGroundTemp.actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, null));
 			graphicsPanel.requestFocusInWindow();
 		}
 	}
@@ -143,12 +146,14 @@ public class BouncyBallSim {
 	private class CreateGroundListener implements ActionListener {
 		public void actionPerformed(ActionEvent e){
 			grounds.clear();
-			for (int i = 0; i < 9; i++){
-				Ground g = new Ground(25, 100 + 300 * i, 300, "CIRC");
-				grounds.add(g);
+			for (int i = 0; i < 500; i++){
+				for (int j = 0; j < 1; j++){
+					Ground g = new Ground(25, 150 + 250 * i, 100 + 200 * j, "CIRC");
+					grounds.add(g);
 
-				Ground floor = new Ground(0, graphicsPanel.getHeight() - 30, graphicsPanel.getWidth(), 15, "RECT");
-				grounds.add(floor);
+					Ground floor = new Ground(0, graphicsPanel.getHeight() - 30, 5000, 15, "RECT");
+					grounds.add(floor);
+				}
 			}
 			graphicsPanel.requestFocusInWindow();
 		}
@@ -158,16 +163,16 @@ public class BouncyBallSim {
 		@Override
 		public void keyPressed(KeyEvent e){
 			if (e.getKeyCode() == KeyEvent.VK_LEFT){
-				ball.ball_a[0] = -X_A;
+				ball.setAX(-X_A);
 			}
 			if (e.getKeyCode() == KeyEvent.VK_RIGHT){
-				ball.ball_a[0] = X_A;
+				ball.setAX(X_A);
 			}
 		}
 		@Override
 		public void keyReleased(KeyEvent e){
 			if (e.getKeyCode() == KeyEvent.VK_RIGHT || e.getKeyCode() == KeyEvent.VK_LEFT){
-				ball.ball_a[0] = 0;
+				ball.setAX(0);
 			}
 		}
 		@Override
@@ -259,6 +264,7 @@ public class BouncyBallSim {
 
 		public void checkCollisions(){
 			speed = Math.sqrt(getVX() * getVX() + getVY() * getVY());
+			boolean collFound = false;
 			for (Ground gr : grounds){
 				if (gr.getType().equals("RECT")){
 	
@@ -274,7 +280,7 @@ public class BouncyBallSim {
 					}
 					if (dx * dx + dy * dy < BALL_RAD * BALL_RAD){
 						collisionVelocityUpdate(ball_v, n);
-						ball.setColl(true);
+						collFound = true;
 					}
 				}
 				else if (gr.getType().equals("CIRC")){
@@ -286,11 +292,11 @@ public class BouncyBallSim {
 					n = Vector.scale(n, (1/mag));	
 					if (dx * dx + dy * dy < Math.pow(gr.getRad() + BALL_RAD, 2)){	
 						collisionVelocityUpdate(ball_v, n);			
-						ball.setColl(true);
+						collFound = true;
 					}
 				}
 			}
-			ball.setColl(false);
+			ball.setColl(collFound);
 		}
 		public void collisionVelocityUpdate(double[] v, double[] n){
 			// v' = v - 2(v \cdot n)n
@@ -298,6 +304,8 @@ public class BouncyBallSim {
 			double[] term2 = Vector.scale(n, 2 * Vector.dot(v, n));
 			v_prime = Vector.subtract(v, term2);
 			ball_v = v_prime;
+			ball_x -= n[0] * BALL_RAD;
+			ball_y -= n[1] * BALL_RAD;
 		}
 
 		public double[] getDxDy(Ground gr){
@@ -337,10 +345,19 @@ public class BouncyBallSim {
 	}
 
 	private class Ground{
-		private int x, y, w, h;
+		private double x, y;
+		private int w, h;
 		private int rad;
 		private String shapeType;
-		public Ground(int x, int y, int w, int h, String shape){
+
+		private double g_x;
+		private double g_y;
+
+		private double[] g_v = new double[2];
+		private double[] g_a = new double[2];
+
+
+		public Ground(double x, double y, int w, int h, String shape){
 			this.x = x;
 			this.y = y;
 			this.w = w;
@@ -348,7 +365,7 @@ public class BouncyBallSim {
 			this.shapeType = shape;
 			graphicsPanel.repaint();
 		}
-		public Ground(int rad, int x, int y, String shape){
+		public Ground(int rad, double x, double y, String shape){
 			this.rad = rad;
 			this.x = x;
 			this.y = y;
@@ -356,12 +373,28 @@ public class BouncyBallSim {
 			graphicsPanel.repaint();
 		}
 
-		public int getX(){ return x; }
-		public int getY(){ return y; }
+		public double getX(){ return x; }
+		public double getY(){ return y; }
 		public int getW(){ return w; }
 		public int getH(){ return h; }
+
+		public void setX(double x) { this.x = x; }
+		public void setY(double y) { this.y = y; }
+
 		public double getRad(){ return rad; }
 		public String getType(){ return shapeType; }
+
+		public double getVX(){ return g_v[0]; }
+		public double getVY(){ return g_v[1]; }
+
+		public double getAX(){ return g_a[0]; }
+		public double getAY(){ return g_a[1]; }
+
+		public void setVX(double dvx){ this.g_v[0] = dvx; }
+		public void setVY(double dvy){ this.g_v[1] = dvy; }
+
+		public void setAX(double dax){ this.g_a[0] = dax; }
+		public void setAY(double day){ this.g_a[1] = day; }
 	}
 
 	private class GraphicsPanel extends JPanel{
@@ -387,6 +420,7 @@ public class BouncyBallSim {
 			}
 
 			if (!ball.getGrap() && ball.getGrapMeter() < ball.GRAP_LIMIT && !ball.grapOnCd()){ ball.changeGrapMeter(GRAP_REC); }
+			
 			ballPosLabel.setText("(" + (int)(ball.getX()) + ", " + (int)(ball.getY()) + ") speed: " + speedFormat.format(ball.getSpeed()));
 			ball.setVY(ball.getVY() + ball.getAY() + G);
 			ball.setY(ball.getY() + ball.getVY());
@@ -400,6 +434,15 @@ public class BouncyBallSim {
 			if (ball.getVX() < 0){
 				ball.setVX(Math.min(0, ball.getVX() + X_FRIC));
 			}
+
+			if (ball.getX() > graphicsPanel.getWidth() - SCROLL_MARK || ball.getX() < SCROLL_MARK){
+				double ballvx = ball.getVX();
+				ball.setX(ball.getX() - ballvx);
+
+				for (Ground gr : grounds) {
+					gr.setX((gr.getX()-ballvx));
+				}
+			}			
 
 			ball.checkCollisions();
 
@@ -487,10 +530,10 @@ public class BouncyBallSim {
 
 			for (Ground gr : grounds){
 				if (gr.getType().equals("RECT")){
-					g2d.fillRect(gr.getX(), gr.getY(), gr.getW(), gr.getH());
+					g2d.fillRect((int)gr.getX(), (int)gr.getY(), gr.getW(), gr.getH());
 				}
 				if (gr.getType().equals("CIRC")){
-					g2d.fillOval(gr.getX(), gr.getY(), (int)gr.getRad() * 2, (int)gr.getRad() * 2);
+					g2d.fillOval((int)gr.getX(), (int)gr.getY(), (int)gr.getRad() * 2, (int)gr.getRad() * 2);
 				}
 			}
 
