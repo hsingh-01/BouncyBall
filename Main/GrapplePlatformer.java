@@ -42,12 +42,15 @@ public class GrapplePlatformer {
 	public static final int HEIGHT = 800;
 	public static final double G = 0.023;
 	public static boolean PAUSE = true;
-	public static final double X_FRIC = 0.004;
+	public static final double X_FRIC = 0.000;
 	public static final double Y_BOUNCE_FRIC = -1;
 	public static final int GAME_SPEED = 4;
 	public static final double GRAP_CD = 1.5;
 	public static final double GRAP_GIVEBACK = 0.25;
 	public static int MS_ELAPSED = 0;
+	public static double grapStartTime = -1;
+	public static final double GRAP_ANIM_MS = 80.0;
+	public static boolean grapDoneDrawing = false;
 
 	public static final int SCROLL_MARK = WIDTH;
 
@@ -55,7 +58,7 @@ public class GrapplePlatformer {
 
 	public JButton resetButton;
 	public static JButton pauseButton;
-	public JButton createGroundButton;
+	// public JButton createGroundButton;
 
 	private JLabel ballPosLabel;
 
@@ -69,7 +72,7 @@ public class GrapplePlatformer {
 	Color grappleBarColor = new Color(35, 49, 140);
 	Color ballColor = new Color(255, 110, 134);
 	Color backgroundColor = new Color(52, 180, 235);
-	Color grappleColor = new Color(0, 0, 0);
+	Color grappleColor = new Color(255, 255, 255);
 
 	public GrapplePlatformer(){
 		window = new JFrame("Grapple Platformer");
@@ -80,7 +83,7 @@ public class GrapplePlatformer {
 
 		resetButton = new JButton("reset");
 		pauseButton = new JButton("pause");
-		createGroundButton = new JButton("create ground");
+		// createGroundButton = new JButton("create ground");
 
 		ballPosLabel = new JLabel();
 		ballPosLabel.setBounds(WIDTH/2, 200, 50, 100);
@@ -90,11 +93,9 @@ public class GrapplePlatformer {
 
 		resetButton.addActionListener(new ResetListener());
 		pauseButton.addActionListener(new PauseButtonListener());
-		createGroundButton.addActionListener(new CreateGroundListener());
 
 		buttonPanel.add(resetButton);
 		buttonPanel.add(pauseButton);
-		//buttonPanel.add(createGroundButton);
 
 		window.add(buttonPanel, BorderLayout.SOUTH);
 
@@ -109,24 +110,21 @@ public class GrapplePlatformer {
 		window.add(graphicsPanel, BorderLayout.CENTER);
 		timer = new Timer(GAME_SPEED, new TimerListener());
 
-		createGround();
-
 		window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		window.setLocationRelativeTo(null);
 		window.setVisible(true);
 		timer.start();
-	}
 
-	public void createGround(){
-		CreateGroundListener resetGroundTemp = new CreateGroundListener();
-		resetGroundTemp.actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, null));		
+		// Ground startingPlatform = new Ground(ball.getX()-25, ball.getY()+25, 50, 10, "RECT", true, true);
+		Ground startingPlatform = new Ground(25, ball.getX() - 25, ball.getY() + 25, "CIRC", false, true);
+		grounds.add(startingPlatform);
 	}
 
 	public class GraphicsPanel extends JPanel{
 		private static double dx = 0;
 		private static double dy = 0;
 		public static Ground grappleTarget = null;
-		public static final double GRAP_LEN = 600.0;
+		public static final double GRAP_LEN = 450.0;
 
 		public static double getDX(){ return dx; }
 		public static double getDY(){ return dy; }
@@ -135,8 +133,37 @@ public class GrapplePlatformer {
 		public static final int GRAP_USE = -3;
 		public static final int GRAP_REC = +2;
 		public static final int BAR_SCALE = 6;
-
+		public static int plats = 0;
 		public void updatePosition(){
+			
+			if (GrapplePlatformer.grounds.get(GrapplePlatformer.grounds.size() - 1).getX() <= ball.getX() + 240){
+				plats++;
+			//	System.out.println("passed: " + GrapplePlatformer.grounds.get(GrapplePlatformer.grounds.size() - 1).getX());
+				int gx = graphicsPanel.getWidth() + 250 + (int)(Math.random()*250);
+				int gy = graphicsPanel.getHeight()/2;
+
+				int gw = 250;
+				int gh = 2500;
+				int gRad = 15;
+
+				for (int i = 0; i < 3; i++){
+					for (int j = 0; j < 1; j++){
+						Ground gPoint = new Ground(gRad, gx + i * (gw/2 - gRad), gy + 150*j, "CIRC", false, true);
+						GrapplePlatformer.grounds.add(gPoint);
+					}
+				}
+
+				Ground g_rect = new Ground(gx, gy, gw, gh, "RECT", false, true);
+				GrapplePlatformer.grounds.add(g_rect);
+
+				if (plats > 15){
+					grounds.remove(0);
+					grounds.remove(1);
+				}
+			}
+			
+			// System.out.println(grounds.size());
+
 			if (MS_ELAPSED >= GRAP_CD * 1000){
 				if (ball.grapOnCd()){
 					ball.setGrapOnCooldown(false);
@@ -215,18 +242,20 @@ public class GrapplePlatformer {
 			 // only then calculate distances - prevents multi-object and object switching when grappling
 			ball.setGrapAvailable(!ball.isColl() && dist < GRAP_LEN && ball.getGrapMeter() > 0);
 			if (ball.getGrap() && ball.grapAvailable() && !ball.grapOnCd()){
-				double nx = dx;
-				double ny = dy;
-				double v[] = {ball.getVX(),	ball.getVY()};
-				double n[] = {nx, ny};
-				double mag = Math.sqrt(nx * nx + ny * ny);
-				n = Vector.scale(n, 1/mag);
-				double radVel = Vector.dot(v, n);
-				if (ball.getGrapMeter() > 0){ ball.changeGrapMeter(GRAP_USE); } // deplete meter
+				if (grapDoneDrawing){
+					double nx = dx;
+					double ny = dy;
+					double v[] = {ball.getVX(),	ball.getVY()};
+					double n[] = {nx, ny};
+					double mag = Math.sqrt(nx * nx + ny * ny);
+					n = Vector.scale(n, 1/mag);
+					double radVel = Vector.dot(v, n);
+					if (ball.getGrapMeter() > 0){ ball.changeGrapMeter(GRAP_USE); } // deplete meter
 
-				if (radVel < 0){ // ball moving away from grap point
-					ball.setVX(ball.getVX() - radVel * n[0]);
-					ball.setVY(ball.getVY() - radVel * n[1]);		
+					if (radVel < 0){ // ball moving away from grap point
+						ball.setVX(ball.getVX() - radVel * n[0]);
+						ball.setVY(ball.getVY() - radVel * n[1]);		
+					}
 				}
 			}
 			if (ball.getGrapMeter() <= 0 && !ball.grapOnCd()){
@@ -239,14 +268,13 @@ public class GrapplePlatformer {
 			super.paintComponent(g);
 			float thickness = 1;
 			int ballBorderThickness = 2;
-			int grappleThickness = 1;
+			int grappleThickness = 2;
 			int grapBarThickness = 5;
 
 			Graphics2D g2d = (Graphics2D) g; //needed for setsrtoke
 			g2d.setStroke(new BasicStroke(thickness));
 
-			g2d.setColor(Color.BLACK);
-			g2d.drawOval((int)ball.getX() - Ball.BALL_RAD, (int)ball.getY() - Ball.BALL_RAD, Ball.BALL_RAD*2, Ball.BALL_RAD*2);
+			
 
 			for (Ground gr : grounds){
 				if (gr.getType().equals("RECT")){
@@ -272,12 +300,22 @@ public class GrapplePlatformer {
 
 			g2d.setColor(ballColor);
 			g2d.fillOval((int)ball.getX() - Ball.BALL_RAD, (int)ball.getY() - Ball.BALL_RAD, Ball.BALL_RAD*2, Ball.BALL_RAD*2);
-			
+
+			g2d.setColor(Color.BLACK);
+			g2d.setStroke(new BasicStroke(ballBorderThickness));
+			g2d.drawOval((int)ball.getX() - Ball.BALL_RAD, (int)ball.getY() - Ball.BALL_RAD, Ball.BALL_RAD*2, Ball.BALL_RAD*2);
+
 			if (ball.getGrap() == true && ball.grapAvailable() && !ball.grapOnCd()){
+				if (grapStartTime == -1){ grapStartTime = MS_ELAPSED; }
 				thickness = grappleThickness;
 				g2d.setStroke(new BasicStroke(thickness));
 				g2d.setColor(grappleColor);
-				g2d.drawLine((int) ball.getX(), (int) ball.getY(), (int)ball.getX() + (int) GraphicsPanel.getDX(), (int)ball.getY() + (int) GraphicsPanel.getDY());
+				double THETA = (Math.atan2(GraphicsPanel.getDY(), GraphicsPanel.getDX()));
+				double len = Math.sqrt(GraphicsPanel.getDX() * GraphicsPanel.getDX() + GraphicsPanel.getDY() * GraphicsPanel.getDY());
+				double timeElapsed = MS_ELAPSED - grapStartTime;
+				double grapFrac = Math.min(1.0, timeElapsed / GRAP_ANIM_MS);
+				if (grapFrac >= 1.0) { grapDoneDrawing = true; }
+				g2d.drawLine((int) ball.getX(), (int) ball.getY(), (int)(ball.getX() + grapFrac * len * Math.cos(THETA)), (int) (ball.getY() + grapFrac * len * Math.sin(THETA)));
 			}
 			if (ball.getGrap() && (ball.grapOnCd() || !ball.grapAvailable())){
 				g2d.setColor(grappleColor);
@@ -285,6 +323,7 @@ public class GrapplePlatformer {
 				g2d.setStroke(new BasicStroke(thickness));
 				g2d.drawOval((int) (ball.getX() - GRAP_LEN), (int) (ball.getY() - GRAP_LEN), (int) (2 * GRAP_LEN), (int)(2 * GRAP_LEN));
 			}	
+			if (!ball.getGrap()){ grapStartTime = -1; grapDoneDrawing = false; }
 		}
 	}
 
