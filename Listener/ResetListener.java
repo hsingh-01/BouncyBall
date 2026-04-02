@@ -17,7 +17,8 @@ public class ResetListener implements ActionListener{
 		GrapplePlatformer.ball.setGrapMeter(Ball.GRAP_LIMIT);
 
 		GrapplePlatformer.grounds.clear();
-		Ground startingPlatform = new Ground(25, GrapplePlatformer.ball.getX() - 25, GrapplePlatformer.ball.getY() + 25, "CIRC", false, true);
+		GrapplePlatformer.GraphicsPanel.plats = 0;
+		Ground startingPlatform = new Ground(25, GrapplePlatformer.WIDTH/2 - 25, GrapplePlatformer.HEIGHT/2 + 25, "CIRC", false, true);
 		GrapplePlatformer.grounds.add(startingPlatform);
 		GrapplePlatformer.graphicsPanel.requestFocusInWindow();
 	}

@@ -146,12 +146,8 @@ public class GrapplePlatformer {
 				int gh = 2500;
 				int gRad = 15;
 
-				for (int i = 0; i < 3; i++){
-					for (int j = 0; j < 1; j++){
-						Ground gPoint = new Ground(gRad, gx + i * (gw/2 - gRad), gy + 150*j, "CIRC", false, true);
-						GrapplePlatformer.grounds.add(gPoint);
-					}
-				}
+				Ground gPoint = new Ground(gRad, gx + (gw/2 - gRad), gy, "CIRC", false, true);
+				GrapplePlatformer.grounds.add(gPoint);
 
 				Ground g_rect = new Ground(gx, gy, gw, gh, "RECT", false, true);
 				GrapplePlatformer.grounds.add(g_rect);
@@ -159,8 +155,6 @@ public class GrapplePlatformer {
 				if (plats > 5){
 					grounds.remove(0);
 					grounds.remove(1);
-					grounds.remove(2);
-					grounds.remove(3);
 				}
 			}
 			
