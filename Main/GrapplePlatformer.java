@@ -169,13 +169,13 @@ public class GrapplePlatformer {
 
 			if (!ball.getGrap() && ball.getGrapMeter() < ball.GRAP_LIMIT && !ball.grapOnCd()){ ball.changeGrapMeter(GRAP_REC); }
 			
-			ballPosLabel.setText("(" + (int)(ball.getDisplayX()) + ", " + (int)(ball.getDisplayY()) + ") speed: " + speedFormat.format(ball.getSpeed()));
+			ballPosLabel.setText("(" + (int)(ball.getDisplayX()) + ", " + (int)(ball.getDisplayY() * -1) + ") speed: " + speedFormat.format(ball.getSpeed()));
 			ball.setVY(ball.getVY() + ball.getAY() + G);
 			ball.setDisplayY(ball.getDisplayY() + ball.getVY());
 			ball.setY(ball.getY() + ball.getVY());
 
 
-			ball.setVX(ball.getVX() + ball.getAX());
+			ball.setVX(Math.min(8.5, ball.getVX() + ball.getAX()));
 			ball.setDisplayX(ball.getDisplayX() + ball.getVX());
 			ball.setX(ball.getX() + ball.getVX());
 
