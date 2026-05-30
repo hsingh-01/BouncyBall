@@ -53,6 +53,7 @@ public class GrapplePlatformer {
 	public static boolean grapDoneDrawing = false;
 
 	public static final int SCROLL_MARK = WIDTH;
+	public static int HIGH_SCORE = 0;
 
 	private JFrame window;
 
@@ -132,7 +133,7 @@ public class GrapplePlatformer {
 		public static final double noGrappleCircleWidth = 1; 
 		public static final int GRAP_USE = -3;
 		public static final int GRAP_REC = +2;
-		public static final int BAR_SCALE = 6;
+		public static final int BAR_SCALE = Ball.GRAP_LIMIT/800;
 		public static int plats = 0;
 		public void updatePosition(){
 			
@@ -169,7 +170,7 @@ public class GrapplePlatformer {
 
 			if (!ball.getGrap() && ball.getGrapMeter() < ball.GRAP_LIMIT && !ball.grapOnCd()){ ball.changeGrapMeter(GRAP_REC); }
 			
-			ballPosLabel.setText("(" + (int)(ball.getDisplayX()) + ", " + (int)(ball.getDisplayY() * -1) + ") speed: " + speedFormat.format(ball.getSpeed()));
+			ballPosLabel.setText("Score: " + Math.max((int)(ball.getDisplayX()), 0) + "   High Score: " + HIGH_SCORE); // score is x position relative to home, but not negative
 			ball.setVY(ball.getVY() + ball.getAY() + G);
 			ball.setDisplayY(ball.getDisplayY() + ball.getVY());
 			ball.setY(ball.getY() + ball.getVY());
@@ -270,56 +271,70 @@ public class GrapplePlatformer {
 			Graphics2D g2d = (Graphics2D) g; //needed for setsrtoke
 			g2d.setStroke(new BasicStroke(thickness));
 
-			
 
-			for (Ground gr : grounds){
-				if (gr.getType().equals("RECT")){
-					g2d.setColor(Color.GRAY);
-					g2d.fillRect((int)gr.getX(), (int)gr.getY(), gr.getW(), gr.getH());
-				}
-				if (gr.getType().equals("CIRC")){
-					g2d.setColor(Color.RED);
-					g2d.fillOval((int)gr.getX(), (int)gr.getY(), (int)gr.getRad() * 2, (int)gr.getRad() * 2);
-				}
+			if (ball.checkIfGameOver()){
+				g2d.setColor(Color.BLACK);
+				pauseButton.doClick();
+				pauseButton.setEnabled(false);
+				int score = (int) ball.getDisplayX();
+				if (score > HIGH_SCORE){ HIGH_SCORE = score; }
+				g2d.fillRect(0, 0, graphicsPanel.getWidth(), graphicsPanel.getHeight());
+				g2d.setColor(Color.RED);
+				Font font = new Font("Arial", Font.BOLD, 24);
+				g2d.setFont(font);
+				g2d.drawString("Game Over | Score: " + score + " | High Score: " + HIGH_SCORE, graphicsPanel.getWidth()/2 - 200, graphicsPanel.getHeight()/2);
 			}
 
-			g2d.setColor(grappleBarColor);
-			g2d.fillRect(((int)getWidth()/2 - ball.GRAP_LIMIT/(BAR_SCALE*2)), 30, ball.getGrapMeter()/BAR_SCALE, 25);
-			
-			if (ball.grapOnCd() && ball.getGrap()){ g2d.setColor(Color.RED); }
-			else { g2d.setColor(Color.BLACK); }
+			else{
+				for (Ground gr : grounds){
+					if (gr.getType().equals("RECT")){
+						g2d.setColor(Color.GRAY);
+						g2d.fillRect((int)gr.getX(), (int)gr.getY(), gr.getW(), gr.getH());
+					}
+					if (gr.getType().equals("CIRC")){
+						g2d.setColor(Color.RED);
+						g2d.fillOval((int)gr.getX(), (int)gr.getY(), (int)gr.getRad() * 2, (int)gr.getRad() * 2);
+					}
+				}
 
-			// outline of meter bar
-			thickness = grapBarThickness;
-			g2d.setStroke(new BasicStroke(thickness));
-			g2d.drawRect(((int)getWidth()/2 - ball.GRAP_LIMIT/(BAR_SCALE*2)), 30, ball.GRAP_LIMIT/BAR_SCALE, 25);
+				g2d.setColor(grappleBarColor);
+				g2d.fillRect(((int)getWidth()/2 - ball.GRAP_LIMIT/(BAR_SCALE*2)), 30, ball.getGrapMeter()/BAR_SCALE, 25);
+				
+				if (ball.grapOnCd() && ball.getGrap()){ g2d.setColor(Color.RED); }
+				else { g2d.setColor(Color.BLACK); }
 
-			g2d.setColor(ballColor);
-			g2d.fillOval((int)ball.getX() - Ball.BALL_RAD, (int)ball.getY() - Ball.BALL_RAD, Ball.BALL_RAD*2, Ball.BALL_RAD*2);
-
-			g2d.setColor(Color.BLACK);
-			g2d.setStroke(new BasicStroke(ballBorderThickness));
-			g2d.drawOval((int)ball.getX() - Ball.BALL_RAD, (int)ball.getY() - Ball.BALL_RAD, Ball.BALL_RAD*2, Ball.BALL_RAD*2);
-
-			if (ball.getGrap() == true && ball.grapAvailable() && !ball.grapOnCd()){
-				if (grapStartTime == -1){ grapStartTime = MS_ELAPSED; }
-				thickness = grappleThickness;
+				// outline of meter bar
+				thickness = grapBarThickness;
 				g2d.setStroke(new BasicStroke(thickness));
-				g2d.setColor(grappleColor);
-				double THETA = (Math.atan2(GraphicsPanel.getDY(), GraphicsPanel.getDX()));
-				double len = Math.sqrt(GraphicsPanel.getDX() * GraphicsPanel.getDX() + GraphicsPanel.getDY() * GraphicsPanel.getDY());
-				double timeElapsed = MS_ELAPSED - grapStartTime;
-				double grapFrac = Math.min(1.0, timeElapsed / GRAP_ANIM_MS);
-				if (grapFrac >= 1.0) { grapDoneDrawing = true; }
-				g2d.drawLine((int) ball.getX(), (int) ball.getY(), (int)(ball.getX() + grapFrac * len * Math.cos(THETA)), (int) (ball.getY() + grapFrac * len * Math.sin(THETA)));
+				g2d.drawRect(((int)getWidth()/2 - ball.GRAP_LIMIT/(BAR_SCALE*2)), 30, ball.GRAP_LIMIT/BAR_SCALE, 25);
+
+				g2d.setColor(ballColor);
+				g2d.fillOval((int)ball.getX() - Ball.BALL_RAD, (int)ball.getY() - Ball.BALL_RAD, Ball.BALL_RAD*2, Ball.BALL_RAD*2);
+
+				g2d.setColor(Color.BLACK);
+				g2d.setStroke(new BasicStroke(ballBorderThickness));
+				g2d.drawOval((int)ball.getX() - Ball.BALL_RAD, (int)ball.getY() - Ball.BALL_RAD, Ball.BALL_RAD*2, Ball.BALL_RAD*2);
+
+				if (ball.getGrap() == true && ball.grapAvailable() && !ball.grapOnCd()){
+					if (grapStartTime == -1){ grapStartTime = MS_ELAPSED; }
+					thickness = grappleThickness;
+					g2d.setStroke(new BasicStroke(thickness));
+					g2d.setColor(grappleColor);
+					double THETA = (Math.atan2(GraphicsPanel.getDY(), GraphicsPanel.getDX()));
+					double len = Math.sqrt(GraphicsPanel.getDX() * GraphicsPanel.getDX() + GraphicsPanel.getDY() * GraphicsPanel.getDY());
+					double timeElapsed = MS_ELAPSED - grapStartTime;
+					double grapFrac = Math.min(1.0, timeElapsed / GRAP_ANIM_MS);
+					if (grapFrac >= 1.0) { grapDoneDrawing = true; }
+					g2d.drawLine((int) ball.getX(), (int) ball.getY(), (int)(ball.getX() + grapFrac * len * Math.cos(THETA)), (int) (ball.getY() + grapFrac * len * Math.sin(THETA)));
+				}
+				if (ball.getGrap() && (ball.grapOnCd() || !ball.grapAvailable())){
+					g2d.setColor(grappleColor);
+					thickness = ballBorderThickness;
+					g2d.setStroke(new BasicStroke(thickness));
+					g2d.drawOval((int) (ball.getX() - GRAP_LEN), (int) (ball.getY() - GRAP_LEN), (int) (2 * GRAP_LEN), (int)(2 * GRAP_LEN));
+				}	
+				if (!ball.getGrap()){ grapStartTime = -1; grapDoneDrawing = false; }
 			}
-			if (ball.getGrap() && (ball.grapOnCd() || !ball.grapAvailable())){
-				g2d.setColor(grappleColor);
-				thickness = ballBorderThickness;
-				g2d.setStroke(new BasicStroke(thickness));
-				g2d.drawOval((int) (ball.getX() - GRAP_LEN), (int) (ball.getY() - GRAP_LEN), (int) (2 * GRAP_LEN), (int)(2 * GRAP_LEN));
-			}	
-			if (!ball.getGrap()){ grapStartTime = -1; grapDoneDrawing = false; }
 		}
 	}
 

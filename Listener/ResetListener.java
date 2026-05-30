@@ -6,6 +6,10 @@ import java.awt.event.*;
 
 public class ResetListener implements ActionListener{
 	public void actionPerformed(ActionEvent e){
+		if (GrapplePlatformer.PAUSE){
+			GrapplePlatformer.PAUSE = !GrapplePlatformer.PAUSE;
+		}
+		GrapplePlatformer.pauseButton.setEnabled(true);
 		GrapplePlatformer.ball.setX(GrapplePlatformer.WIDTH/2);
 		GrapplePlatformer.ball.setY(GrapplePlatformer.HEIGHT/2);
 		GrapplePlatformer.ball.setDisplayX(0);

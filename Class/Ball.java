@@ -24,7 +24,7 @@ public class Ball{
 
 		private boolean grapOnCd = false;
 
-		public static final int GRAP_LIMIT = 4800;
+		public static final int GRAP_LIMIT = 7200;
 		private int grapMeter = GRAP_LIMIT;
 
 		public Ball(double bx, double by){
@@ -112,11 +112,15 @@ public class Ball{
 			setColl(collFound);
 		}
 		public void collisionVelocityUpdate(double[] v, double[] n){
-			// v' = v - 2(v \cdot n)n
+			// v' = v - 2(v (dot) n)n
 			double[] v_prime;
 			double[] term2 = Vector.scale(n, 2 * Vector.dot(v, n));
 			v_prime = Vector.subtract(v, term2);
 			ball_v = v_prime;
+		}
+
+		public boolean checkIfGameOver(){
+			return (getDisplayY() > 3000);
 		}
 
 		public double[] getDxDy(Ground gr){
