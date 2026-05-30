@@ -74,6 +74,7 @@ public class Ball{
 		public void changeGrapMeter(int g){ grapMeter += g; }
 		public void setGrapMeter(int g){ grapMeter = g; }
 
+		// checks if ball is colliding with any other objects - unused currently
 		public void checkCollisions(){
 			speed = Math.sqrt(getVX() * getVX() + getVY() * getVY());
 			boolean collFound = false;
@@ -111,6 +112,8 @@ public class Ball{
 			}
 			setColl(collFound);
 		}
+
+		// unused feature with collisions
 		public void collisionVelocityUpdate(double[] v, double[] n){
 			// v' = v - 2(v (dot) n)n
 			double[] v_prime;
@@ -122,7 +125,7 @@ public class Ball{
 		public boolean checkIfGameOver(){
 			return (getDisplayY() > 3000);
 		}
-
+		// gets distance from object
 		public double[] getDxDy(Ground gr){
 			if (gr.getType().equals("RECT")){
 				closeX = 0;

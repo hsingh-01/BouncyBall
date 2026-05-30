@@ -5,6 +5,8 @@ import Class.Ground;
 import java.awt.event.*;
 
 public class ResetListener implements ActionListener{
+
+	// resets ball position and all major constants and properties
 	public void actionPerformed(ActionEvent e){
 		if (GrapplePlatformer.PAUSE){
 			GrapplePlatformer.PAUSE = !GrapplePlatformer.PAUSE;

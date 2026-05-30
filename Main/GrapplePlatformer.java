@@ -175,7 +175,7 @@ public class GrapplePlatformer {
 			ball.setDisplayY(ball.getDisplayY() + ball.getVY());
 			ball.setY(ball.getY() + ball.getVY());
 
-
+			// basic kinematic updates
 			ball.setVX(Math.min(8.5, ball.getVX() + ball.getAX()));
 			ball.setDisplayX(ball.getDisplayX() + ball.getVX());
 			ball.setX(ball.getX() + ball.getVX());
@@ -320,6 +320,7 @@ public class GrapplePlatformer {
 					thickness = grappleThickness;
 					g2d.setStroke(new BasicStroke(thickness));
 					g2d.setColor(grappleColor);
+					// animation for grapple "shooting out"
 					double THETA = (Math.atan2(GraphicsPanel.getDY(), GraphicsPanel.getDX()));
 					double len = Math.sqrt(GraphicsPanel.getDX() * GraphicsPanel.getDX() + GraphicsPanel.getDY() * GraphicsPanel.getDY());
 					double timeElapsed = MS_ELAPSED - grapStartTime;

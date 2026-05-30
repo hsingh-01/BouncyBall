@@ -1,5 +1,5 @@
 package Class;
-
+// vector library needed
 public class Vector {
 	public static double dot(double[] A, double[] B){
 		return (A[0] * B[0]) + (A[1] * B[1]);
