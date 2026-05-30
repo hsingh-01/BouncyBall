@@ -13,3 +13,5 @@ java -cp build Main.GrapplePlatformer
 ```
 jar cfe GrapplePlatformer.jar GrapplePlatformer *.class
 ```
+# Key Controls
+Left/right arrow keys move the ball, and Z activates the grapple (within range).
